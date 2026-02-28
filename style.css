@@ -671,3 +671,104 @@ label,
   z-index: 9999;
   animation: fade-in-up 0.3s ease;
 }
+
+/* Quick Actions */
+.quick-action-row {
+  display: flex !important;
+  gap: 8px !important;
+  justify-content: center !important;
+  margin-bottom: 8px !important;
+}
+
+.btn-quick {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 8px !important;
+  color: var(--pine-dark) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+}
+
+.btn-quick:hover {
+  background: var(--bg-hover) !important;
+  color: var(--royal-gold) !important;
+  border-color: var(--royal-gold) !important;
+  box-shadow: var(--shadow-gold) !important;
+  transform: translateY(-2px);
+}
+
+/* Pulsing Eye */
+@keyframes eye-pulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.2));
+  }
+
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8));
+    color: var(--royal-gold);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.2));
+  }
+}
+
+#pulsing-eye.pulsing {
+  animation: eye-pulse 2.5s infinite ease-in-out;
+}
+
+/* Custom Loading Spinner Hack */
+.progress-text {
+  visibility: hidden;
+}
+
+.progress-text::before {
+  content: "Heimdall is gazing...";
+  visibility: visible;
+  display: block;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 14px;
+  color: var(--pine-dark);
+  text-align: center;
+  margin-top: -15px;
+  letter-spacing: 2px;
+}
+
+/* Center Column Setup */
+#center-vision-column {
+  border-right: 1px solid var(--border-light);
+  padding: 0 16px;
+  align-items: center;
+}
+
+.massive-camera {
+  width: 100% !important;
+  max-width: 800px;
+  margin: 0 auto !important;
+}
+
+/* Voice & Settings Group */
+.voice-controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.speaker-toggle label {
+  background: transparent !important;
+  border: none !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  color: var(--pine-dark) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}

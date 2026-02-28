@@ -114,9 +114,99 @@ CHAT_PANEL_HEADER = """
 </div>
 """
 
+HEADER_HTML = """
+<div style="text-align: center; margin-bottom: 24px;">
+  <div style="display: flex; justify-content: center; align-items: center; gap: 16px;">
+    <svg id="pulsing-eye" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 56px; height: 56px; color: var(--pine-dark);">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+    </svg>
+    <h1 style="font-family: 'Cinzel Decorative', serif; font-size: 56px; color: var(--pine-dark); margin: 0; font-weight: 900; letter-spacing: 4px; line-height: 1;">HEIMDALL</h1>
+  </div>
+  <div style="font-family: 'Inter', sans-serif; font-size: 16px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 12px; font-weight: 500;">
+    The All-Seeing Guardian of Your World
+  </div>
+</div>
+"""
+
+
 # ──────────────────────────────────────────────
 # JAVASCRIPT
 # ──────────────────────────────────────────────
+
+
+JS_MIC_INPUT = '''
+function() {
+  if (!('webkitSpeechRecognition' in window)) {
+    window.showToast('Speech Recognition not supported in this browser.', '#DC2626');
+    return '';
+  }
+  return new Promise((resolve) => {
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    window.showToast('🎤 Heimdall is listening...', '#D4AF37');
+    
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      window.showToast('Speech captured.', '#10B981');
+      resolve(text);
+    };
+    recognition.onerror = (event) => {
+      window.showToast('Microphone error.', '#DC2626');
+      resolve('');
+    };
+    recognition.start();
+  });
+}
+'''
+
+JS_START_WATCHING = '''
+function() {
+  const overlay = document.getElementById('watching-overlay');
+  const eye = document.getElementById('pulsing-eye');
+  if (overlay) overlay.style.display = 'block';
+  if (eye) eye.classList.add('pulsing');
+  window.showToast('👁 THE WATCHER AWAKENS', '#D4AF37');
+  
+  if (!window.heimdallInterval) {
+    window.heimdallInterval = setInterval(() => {
+      const btn = document.querySelector('#hidden-auto-btn');
+      if (btn) btn.click();
+    }, 3000);
+  }
+  return null;
+}
+'''
+
+JS_STOP_WATCHING = '''
+function() {
+  const overlay = document.getElementById('watching-overlay');
+  const eye = document.getElementById('pulsing-eye');
+  if (overlay) overlay.style.display = 'none';
+  if (eye) eye.classList.remove('pulsing');
+  window.showToast('⏹ THE WATCHER RESTS', '#64748B');
+  
+  if (window.heimdallInterval) {
+    clearInterval(window.heimdallInterval);
+    window.heimdallInterval = null;
+  }
+  return null;
+}
+'''
+
+JS_SILENT_CAPTURE = '''
+function() {
+  const eye = document.getElementById('pulsing-eye');
+  if(eye) {
+    eye.style.transform = 'scale(1.2)';
+    setTimeout(() => { eye.style.transform = 'scale(1)'; }, 200);
+  }
+  return null;
+}
+'''
 
 JS_INIT = """
 function() {
@@ -185,6 +275,8 @@ function() {
 JS_SPEAK = """
 function(text) {
   if (!text || text.trim() === '') return;
+  const toggle = document.querySelector('#speaker-toggle input[type="checkbox"]');
+  if (toggle && !toggle.checked) return; // Muted
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
@@ -281,6 +373,8 @@ function loadSessionHistory() {
 """
 
 FULL_HEAD_JS = f"""
+<link rel="manifest" href="file/manifest.json">
+<link rel="apple-touch-icon" href="file/mountains.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Orbitron:wght@400;500;600;700;900&family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -304,11 +398,11 @@ FULL_HEAD_JS = f"""
 
 def process_message(
     user_message: dict | None,
-    audio_bytes,
     snapshot_image,
     chat_history: list,
     use_snapshot: bool,
 ) -> tuple[list, str, str]:
+    audio_bytes = None
     """
     Core message handler.
     Accepts multimodal input (text + optional image from snapshot/upload)
@@ -483,181 +577,97 @@ def build_app() -> gr.Blocks:
         use_snapshot_flag = gr.State(value=False)
 
         # ──────────────────────────────────────────────────────────
-        # OUTER LAYOUT: Sidebar + Main
+        # OUTER LAYOUT: 3-Column (20% - 60% - 20%)
         # ──────────────────────────────────────────────────────────
         with gr.Row(elem_id="main-wrapper"):
 
-            # ── LEFT SIDEBAR ──
-            with gr.Column(
-                scale=0,
-                min_width=260,
-                elem_id="sidebar-column",
-            ):
+            # ── LEFT SIDEBAR (20%) ──
+            with gr.Column(scale=1, min_width=260, elem_id="sidebar-column"):
                 gr.HTML(SIDEBAR_HTML, elem_id="sidebar-html")
+                
+                with gr.Group(elem_classes=["sidebar-controls"]):
+                    start_watch_btn = gr.Button("👁 START WATCHING", variant="primary", elem_classes=["btn-majestic", "btn-majestic-primary"])
+                    stop_watch_btn = gr.Button("⏹ STOP", variant="secondary", elem_classes=["btn-majestic"])
+                    snapshot_btn = gr.Button("📸 CAPTURE SNAPSHOT", variant="secondary", elem_classes=["btn-majestic"])
+                    clear_btn = gr.Button("🗑 CLEAR MEMORY", variant="secondary", elem_classes=["btn-majestic", "btn-majestic-danger"])
+                    use_snapshot_cb = gr.Checkbox(label="Attach to next msg", value=False, visible=False, elem_id="use-snapshot-cb")
+                    hidden_auto_btn = gr.Button("hidden_auto", visible=False, elem_id="hidden-auto-btn")
 
-            # ── MAIN CONTENT ──
-            with gr.Column(scale=1, elem_id="main-content"):
-
-                # Top bar
-                gr.HTML(TOPBAR_HTML)
-
-                # ────────────────────────────────────────
-                # VISION PANEL
-                # ────────────────────────────────────────
-                with gr.Column(
-                    elem_id="vision-panel",
-                    elem_classes=["vision-panel-wrapper"],
-                ):
-                    gr.HTML(VISION_PANEL_HEADER)
-
-                    with gr.Row():
-                        # Live camera / upload area
-                        with gr.Column(scale=2, min_width=300):
-                            with gr.Group(elem_classes=["camera-frame"]):
-                                gr.HTML('<div class="scan-line"></div>')
-                                webcam = gr.Image(
-                                    sources=["webcam", "upload"],
-                                    label="",
-                                    streaming=False,
-                                    show_label=False,
-                                    height=320,
-                                    elem_id="webcam-feed",
-                                    elem_classes=["cyber-webcam"],
-                                )
-
-                            # Camera controls
-                            with gr.Row(elem_classes=["camera-controls"]):
-                                snapshot_btn = gr.Button(
-                                    "CAPTURE SNAPSHOT",
-                                    variant="primary",
-                                    size="sm",
-                                    elem_classes=["btn-majestic", "btn-majestic-primary"],
-                                )
-                                use_snapshot_cb = gr.Checkbox(
-                                    label="Attach to next message",
-                                    value=False,
-                                    elem_id="use-snapshot-cb",
-                                )
-
-                        with gr.Column(scale=1, min_width=200):
-                            gr.HTML("""
-                            <div style="font-family:'Inter',sans-serif; font-size:10px; font-weight:600;
-                              color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;
-                              margin-bottom:8px;">SNAPSHOT PREVIEW</div>
-                            """)
-                            snapshot_preview = gr.Image(
-                                label="",
-                                show_label=False,
-                                height=200,
-                                interactive=False,
-                                elem_id="snapshot-preview",
-                                elem_classes=["snapshot-preview-img"],
-                            )
-
-                    # Rune divider
-                    gr.HTML(f"""
-                    <div style="text-align:center; color:var(--royal-gold); font-size:14px;
-                      letter-spacing:8px; margin:8px 0; opacity:0.3; font-family:'Cinzel Decorative',serif;">
-                      ✦ ✧ ✦
-                    </div>
-                    """)
-
-                # ────────────────────────────────────────
-                # CHAT PANEL
-                # ────────────────────────────────────────
-                with gr.Column(elem_id="chat-panel"):
-                    gr.HTML(CHAT_PANEL_HEADER)
-
-                    # Chatbot
-                    chatbot = gr.Chatbot(
-                        value=[],
-                        height=420,
+            # ── CENTER WEBCAM (60%) ──
+            with gr.Column(scale=3, min_width=500, elem_id="center-vision-column"):
+                gr.HTML(HEADER_HTML)
+                
+                with gr.Group(elem_classes=["camera-frame", "massive-camera"]):
+                    gr.HTML('<div id="watching-overlay" style="display:none; position:absolute; top:20px; left:20px; z-index:10; background:rgba(6,78,59,0.8); color:#D4AF37; padding:8px 16px; border-radius:8px; font-family:\'Cinzel Decorative\', serif; letter-spacing:2px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">Heimdall is Watching...</div>')
+                    webcam = gr.Image(
+                        sources=["webcam", "upload"],
+                        label="",
+                        streaming=False,
                         show_label=False,
-                        avatar_images=(
-                            None,  # user avatar
-                            None,  # bot avatar (can set to file path)
-                        ),
-                        render_markdown=True,
-                        elem_id="heimdall-chatbot",
-                        elem_classes=["chatbot-container"],
+                        height=540,
+                        elem_id="webcam-feed",
+                        elem_classes=["majestic-webcam"],
                     )
+                
+                gr.HTML('<div style="font-family:\'Inter\',sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-top:24px; margin-bottom:12px; text-align:center;">✦ QUICK ACTIONS ✦</div>')
+                with gr.Row(elem_classes=["quick-action-row"]):
+                    btn_q1 = gr.Button("Organize this desk", size="sm", elem_classes=["btn-quick"])
+                    btn_q2 = gr.Button("What plant is this + save it?", size="sm", elem_classes=["btn-quick"])
+                    btn_q3 = gr.Button("Fix this screen error", size="sm", elem_classes=["btn-quick"])
+                with gr.Row(elem_classes=["quick-action-row"]):
+                    btn_q4 = gr.Button("Style this outfit", size="sm", elem_classes=["btn-quick"])
+                    btn_q5 = gr.Button("Identify this object & fun facts", size="sm", elem_classes=["btn-quick"])
+                    btn_q6 = gr.Button("Solve this homework", size="sm", elem_classes=["btn-quick"])
 
-                    # ── Input area ──
-                    with gr.Row(elem_classes=["input-row"]):
-                        with gr.Column(scale=4):
-                            msg_input = gr.MultimodalTextbox(
-                                placeholder="⟨ Speak to Heimdall — text, image, or both ⟩",
-                                show_label=False,
-                                file_types=["image", "video", ".mp4", ".mov", ".jpg", ".png"],
-                                submit_btn=True,
-                                stop_btn=False,
-                                elem_id="msg-input",
-                                elem_classes=["cyber-input"],
-                                max_plain_text_length=2000,
-                            )
+            # ── RIGHT CHAT (20%) ──
+            with gr.Column(scale=1, min_width=320, elem_id="right-chat-column"):
+                gr.HTML(CHAT_PANEL_HEADER)
+                
+                snapshot_preview = gr.Image(
+                    label="", show_label=False, height=120, interactive=False, elem_id="snapshot-preview"
+                )
 
-                        with gr.Column(scale=1, min_width=140):
-                            gr.HTML("""
-                            <div style="font-family:'Inter',sans-serif; font-size:10px; font-weight:600;
-                              color:var(--text-muted); letter-spacing:1px; margin-bottom:6px;
-                              text-align:center; text-transform:uppercase;">VOICE COMMAND</div>
-                            """)
-                            audio_input = gr.Audio(
-                                sources=["microphone"],
-                                label="",
-                                show_label=False,
-                                elem_id="audio-input",
-                                elem_classes=["audio-section"],
-                            )
-
-                    # ── TTS: hidden text area triggered by JS ──
-                    tts_trigger = gr.Textbox(
-                        visible=False,
-                        elem_id="tts-trigger",
+                chatbot = gr.Chatbot(
+                    value=[],
+                    height=450,
+                    show_label=False,
+                    render_markdown=True,
+                    elem_id="heimdall-chatbot",
+                )
+                
+                with gr.Group(elem_classes=["chat-input-group"]):
+                    msg_input = gr.MultimodalTextbox(
+                        placeholder="Speak to Heimdall...",
+                        show_label=False,
+                        file_types=["image", "video"],
+                        submit_btn=True,
+                        elem_id="msg-input",
                     )
+                    with gr.Row(elem_classes=["voice-controls"]):
+                        mic_btn = gr.Button("🎤 VOICE", size="sm", elem_classes=["btn-majestic"])
+                        speak_toggle = gr.Checkbox(label="Speaker Output", value=True, elem_classes=["speaker-toggle"], container=False, elem_id="speaker-toggle")
+                        speak_btn = gr.Button("REPEAT", size="sm", elem_classes=["btn-majestic"])
 
-                    # ── Action buttons ──
-                    with gr.Row(elem_classes=["action-buttons-row"]):
-                        clear_btn = gr.Button(
-                            "CLEAR MEMORY",
-                            variant="secondary",
-                            size="sm",
-                            elem_classes=["btn-majestic", "btn-majestic-danger"],
-                        )
-                        export_btn = gr.Button(
-                            "EXPORT SESSION",
-                            variant="secondary",
-                            size="sm",
-                            elem_classes=["btn-majestic"],
-                        )
-                        speak_btn = gr.Button(
-                            "REPEAT LAST",
-                            variant="secondary",
-                            size="sm",
-                            elem_classes=["btn-majestic"],
-                        )
-
-                    # ── Status bar ──
-                    gr.HTML(f"""
-                    <div style="display:flex; align-items:center; justify-content:space-between;
-                      margin-top:8px; padding:4px 0; border-top:1px solid var(--border-light);">
-                      <span style="font-family:'Inter', sans-serif; font-size:10px; color:var(--text-muted); letter-spacing:1px; font-weight:500;">
-                        ✦ REALM SECURED · ZERO-KNOWLEDGE VAULT ✦
-                      </span>
-                      <span style="font-family:'Inter', sans-serif; font-size:10px; font-weight:600; color:var(--pine-mid);">
-                        v{APP_VERSION}
-                      </span>
-                    </div>
-                    """)
-
-        # ── Hidden export data textbox ──
+                with gr.Row():
+                    export_btn = gr.Button("EXPORT", size="sm", elem_classes=["btn-majestic"])
+                    
+        mic_hidden_text = gr.Textbox(visible=False, elem_id="mic-hidden-text")
         export_data_box = gr.Textbox(visible=False, elem_id="export-data")
+        tts_trigger = gr.Textbox(visible=False, elem_id="tts-trigger")
 
         # ──────────────────────────────────────────────────────────
         # EVENT HANDLERS
         # ──────────────────────────────────────────────────────────
+        
+        start_watch_btn.click(fn=None, js=JS_START_WATCHING)
+        stop_watch_btn.click(fn=None, js=JS_STOP_WATCHING)
+        hidden_auto_btn.click(
+            fn=take_snapshot,
+            inputs=[webcam],
+            outputs=[snapshot_preview, use_snapshot_cb],
+            js=JS_SILENT_CAPTURE,
+        )
 
-        # Snapshot capture
         snapshot_btn.click(
             fn=take_snapshot,
             inputs=[webcam],
@@ -665,28 +675,54 @@ def build_app() -> gr.Blocks:
             js=JS_SNAPSHOT_FLASH,
         )
 
-        # Message submit
         msg_input.submit(
             fn=process_message,
-            inputs=[msg_input, audio_input, snapshot_preview, chatbot, use_snapshot_cb],
+            inputs=[msg_input, snapshot_preview, chatbot, use_snapshot_cb],
             outputs=[chatbot, tts_trigger, export_data_box],
         )
 
-        # After TTS trigger updates, fire Web Speech API
+        # Quick actions
+        def make_submit(text):
+            return {"text": text, "files": []}
+
+        for quick_btn, default_text in [
+            (btn_q1, "Organize this desk"), (btn_q2, "What plant is this + save it?"),
+            (btn_q3, "Fix this screen error"), (btn_q4, "Style this outfit"),
+            (btn_q5, "Identify this object & fun facts"), (btn_q6, "Solve this homework")
+        ]:
+            quick_btn.click(
+                fn=lambda t=default_text: make_submit(t),
+                inputs=[],
+                outputs=[msg_input]
+            ).then(
+                fn=process_message,
+                inputs=[msg_input, snapshot_preview, chatbot, use_snapshot_cb],
+                outputs=[chatbot, tts_trigger, export_data_box],
+            )
+
+        mic_btn.click(
+            fn=None,
+            inputs=[],
+            outputs=[mic_hidden_text],
+            js=JS_MIC_INPUT,
+        ).then(
+            fn=lambda t: make_submit(t),
+            inputs=[mic_hidden_text],
+            outputs=[msg_input]
+        )
+
         tts_trigger.change(
             fn=None,
             inputs=[tts_trigger],
             js=JS_SPEAK,
         )
 
-        # Speak last message button
         speak_btn.click(
             fn=None,
             inputs=[tts_trigger],
             js=JS_SPEAK,
         )
 
-        # Clear memory
         clear_btn.click(
             fn=clear_memory,
             inputs=[],
@@ -694,7 +730,6 @@ def build_app() -> gr.Blocks:
             js=JS_CLEAR,
         )
 
-        # Export session
         export_btn.click(
             fn=export_session,
             inputs=[chatbot],
@@ -705,13 +740,13 @@ def build_app() -> gr.Blocks:
             js=JS_EXPORT,
         )
 
-        # Initialize on load
         demo.load(
             fn=None,
             js=JS_INIT,
         )
 
     return demo, custom_css
+
 
 
 # ──────────────────────────────────────────────
