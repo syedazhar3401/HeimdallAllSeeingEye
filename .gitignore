@@ -8,6 +8,7 @@ __pycache__/
 *.png
 *.jpg
 *.json
+!manifest.json
 *.sqlite
 out.txt
 error.log
