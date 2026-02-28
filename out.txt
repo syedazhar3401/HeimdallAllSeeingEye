@@ -1,0 +1,31 @@
+
+======================================================
+       HEIMDALL — YOUR VISUAL LIFE GUARDIAN          
+       Initializing Bifrost Connection...            
+======================================================
+    
+Traceback (most recent call last):
+  File "C:\Users\Syed\Documents\Mistral Hackathon\app.py", line 754, in <module>
+    app, custom_css = build_app()
+                      ~~~~~~~~~^^
+  File "C:\Users\Syed\Documents\Mistral Hackathon\app.py", line 569, in build_app
+    heimdall_agent_state = gr.State(value=HeimdallAgent)
+  File "C:\Users\Syed\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\gradio\component_meta.py", line 194, in wrapper
+    return fn(self, **kwargs)
+  File "C:\Users\Syed\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\gradio\components\state.py", line 57, in __init__
+    super().__init__(value=value, render=render)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Syed\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\gradio\component_meta.py", line 194, in wrapper
+    return fn(self, **kwargs)
+  File "C:\Users\Syed\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\gradio\components\base.py", line 207, in __init__
+    load_fn, initial_value = self.get_load_fn_and_initial_value(value, inputs)
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\Syed\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\gradio\components\base.py", line 247, in get_load_fn_and_initial_value
+    initial_value = value()
+  File "C:\Users\Syed\Documents\Mistral Hackathon\heimdall_agent.py", line 27, in __init__
+    self._init_agent()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Syed\Documents\Mistral Hackathon\heimdall_agent.py", line 31, in _init_agent
+    agent = self.client.agents.create(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Agents' object has no attribute 'create'
