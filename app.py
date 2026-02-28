@@ -13,8 +13,13 @@ import datetime
 import uuid
 import io
 import os
+import time
 from pathlib import Path
 from PIL import Image
+from dotenv import load_dotenv
+
+load_dotenv()
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 # ──────────────────────────────────────────────
 # CONSTANTS
@@ -396,12 +401,18 @@ FULL_HEAD_JS = f"""
 # BACK-END LOGIC
 # ──────────────────────────────────────────────
 
+def call_heimdall(image_base64: str = None, user_text: str = "") -> tuple[str, list]:
+    # Placeholder for Mistral Vision API integration
+    # returns (response_text, list_of_generated_image_urls_or_paths)
+    return f"This is a placeholder response from Heimdall. I received your text: '{user_text}' and {'an image' if image_base64 else 'no image'}.", []
+
+
 def process_message(
     user_message: dict | None,
     snapshot_image,
     chat_history: list,
     use_snapshot: bool,
-) -> tuple[list, str, str]:
+):
     audio_bytes = None
     """
     Core message handler.
@@ -433,8 +444,10 @@ def process_message(
     if audio_bytes is not None and not text_input.strip():
         text_input = "[🎙 Voice message received — transcription requires a speech-to-text API]"
 
-    if not text_input.strip() and image_for_message is None and audio_bytes is None:
-        return chat_history, "", json.dumps({"messages": chat_history})
+        return
+
+    # ── Output Variables Setup ──
+    b64_img_for_api = None
 
     # ── Build user message ──
     if image_for_message is not None:
@@ -449,9 +462,10 @@ def process_message(
                     img_data = base64.b64encode(f.read()).decode()
                 ext = Path(image_for_message).suffix.lower().replace('.', '') or 'png'
                 mime = f"image/{ext}" if ext in ['png', 'jpg', 'jpeg', 'gif', 'webp'] else 'image/png'
+                b64_img_for_api = f"data:{mime};base64,{img_data}"
                 user_msg["content"].append({
                     "type": "image_url",
-                    "image_url": {"url": f"data:{mime};base64,{img_data}"}
+                    "image_url": {"url": b64_img_for_api}
                 })
             elif hasattr(image_for_message, '__array__'):
                 # numpy array from webcam
@@ -461,9 +475,10 @@ def process_message(
                 buf = io.BytesIO()
                 pil_img.save(buf, format='PNG')
                 img_data = base64.b64encode(buf.getvalue()).decode()
+                b64_img_for_api = f"data:image/png;base64,{img_data}"
                 user_msg["content"].append({
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{img_data}"}
+                    "image_url": {"url": b64_img_for_api}
                 })
         except Exception as e:
             user_msg["content"].append({"type": "text", "text": f"[Image attached — {str(e)}]"})
@@ -474,58 +489,35 @@ def process_message(
         user_msg = {"role": "user", "content": text_input.strip() or "[Voice message]"}
 
     chat_history = chat_history + [user_msg]
+    export_json = json.dumps({"session_id": "current", "messages": chat_history, "timestamp": timestamp})
 
-    # ── Generate assistant response (mock oracle) ──
-    has_image = image_for_message is not None
-    has_audio = audio_bytes is not None
+    # Yield just the user message first
+    yield chat_history, "", export_json
 
-    response_lines = []
-    response_lines.append(f"⟨ ᚹᚨᚱᛒᚱᛁᚾᚷ ⟩ — *{timestamp}*")
-    response_lines.append("")
-
-    if has_image and text_input.strip():
-        response_lines.append(f"I have gazed upon your vision and received your words:")
-        response_lines.append(f"> *\"{text_input.strip()}\"*")
-        response_lines.append("")
-        response_lines.append("The image reveals forms and patterns that ripple through the Bifrost of perception. "
-                               "In the realm of Yggdrasil, all that is seen carries meaning. "
-                               "My sight pierces beyond the veil of pixels into the essence beneath.")
-    elif has_image:
-        response_lines.append("My all-seeing gaze has captured your image. The visual tapestry before me "
-                               "speaks of shapes and shadows, light and form. Through the lens of Asgard, "
-                               "I perceive what mortal eyes may miss.")
-    elif has_audio:
-        response_lines.append("Your voice echoes across the realms. "
-                               "The runes vibrate with your utterance. "
-                               "Speak clearly, and Heimdall shall relay your words to the Nine Worlds.")
-    elif text_input.strip():
-        response_lines.append(f"Your message traverses the Bifrost:")
-        response_lines.append(f"> *\"{text_input.strip()}\"*")
-        response_lines.append("")
-        response_lines.append("I receive your words and hold them in the memory of Mímir's Well. "
-                               "The guardian never forgets; all that is witnessed is preserved "
-                               "in the eternal record of the Watcher.")
-    else:
-        response_lines.append("The Watch continues. No input detected — yet all is observed.")
-
-    response_lines.append("")
-    response_lines.append("*— HEIMDALL, Guardian of the Bifrost*")
-
-    assistant_text = "\n".join(response_lines)
-    bot_msg = {"role": "assistant", "content": assistant_text}
-    chat_history = chat_history + [bot_msg]
+    # ── Call Heimdall Placeholder ──
+    response_text, images = call_heimdall(image_base64=b64_img_for_api, user_text=text_input)
+    
+    # Prepare Assistant Message Placeholder
+    assistant_msg = {"role": "assistant", "content": ""}
+    chat_history = chat_history + [assistant_msg]
+    
+    # ── Streaming Simulation ──
+    # Yield chunk by chunk
+    words = response_text.split(" ")
+    accumulated_text = f"⟨ ᚹᚨᚱᛒᚱᛁᚾᚷ ⟩ — *{timestamp}* \n\n"
+    
+    for word in words:
+        accumulated_text += word + " "
+        chat_history[-1]["content"] = accumulated_text
+        export_json = json.dumps({"session_id": "current", "messages": chat_history, "timestamp": timestamp})
+        yield chat_history, "", export_json
+        time.sleep(0.05) # Simulate slight stream delay
 
     # ── Plain text for TTS ──
-    tts_text = (f"Warbring from Heimdall. Guardian message received. "
-                f"{'Image analyzed. ' if has_image else ''}"
-                f"{'Voice acknowledged. ' if has_audio else ''}"
-                f"I receive your words and hold them eternal. "
-                f"Heimdall, Guardian of the Bifrost.")
+    tts_text = response_text
 
-    export_data = {"session_id": "current", "messages": chat_history, "timestamp": timestamp}
-    export_json = json.dumps(export_data)
-
-    return chat_history, tts_text, export_json
+    export_json = json.dumps({"session_id": "current", "messages": chat_history, "timestamp": timestamp})
+    yield chat_history, tts_text, export_json
 
 
 def take_snapshot(webcam_image):
@@ -575,6 +567,8 @@ def build_app() -> gr.Blocks:
         snapshot_state = gr.State(value=None)   # holds last snapshot
         export_json_state = gr.State(value=json.dumps({"messages": []}))
         use_snapshot_flag = gr.State(value=False)
+        conversation_id = gr.State(value=lambda: str(uuid.uuid4()))
+        last_image_base64 = gr.State(value=None)
 
         # ──────────────────────────────────────────────────────────
         # OUTER LAYOUT: 3-Column (20% - 60% - 20%)
