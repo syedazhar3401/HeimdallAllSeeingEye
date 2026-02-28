@@ -1,0 +1,673 @@
+/* =======================================================
+   HEIMDALL — Your Visual Life Guardian
+   Majestic Nordic Fantasy Theme
+   ======================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ---- CSS Variables ---- */
+:root {
+  /* Bright Nature Palette */
+  --bg-sky: #F0F8FF;
+  --bg-mist: #F8FAFC;
+  --bg-panel: rgba(255, 255, 255, 0.85);
+  /* Frosted Glass */
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-hover: rgba(241, 245, 249, 0.9);
+
+  /* Forest Greens */
+  --pine-dark: #064E3B;
+  --pine-mid: #047857;
+  --pine-light: #10B981;
+
+  /* Royal Gold & Ocean Blues */
+  --royal-gold: #D4AF37;
+  --gold-highlight: #FBBF24;
+  --ocean-blue: #0284C7;
+  --alert-red: #DC2626;
+
+  /* Text Colors */
+  --text-primary: #0F172A;
+  /* Slate 900 */
+  --text-secondary: #334155;
+  /* Slate 700 */
+  --text-muted: #64748B;
+  /* Slate 500 */
+  --text-gold: #B45309;
+
+  /* Borders & Shadows */
+  --border-light: rgba(15, 23, 42, 0.1);
+  --border-gold: rgba(212, 175, 55, 0.4);
+
+  --shadow-soft: 0 4px 24px -4px rgba(6, 78, 59, 0.08);
+  --shadow-elevated: 0 12px 32px -4px rgba(6, 78, 59, 0.12), 0 4px 12px -2px rgba(6, 78, 59, 0.08);
+  --shadow-gold: 0 4px 16px rgba(212, 175, 55, 0.2);
+
+  --sidebar-width: 280px;
+  --radius: 12px;
+  --radius-lg: 16px;
+}
+
+/* ---- Global Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg-mist) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Base background layer to simulate misty sky */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #E0F2FE 0%, #F0FDF4 50%, #FEF3C7 100%);
+  z-index: -1;
+  opacity: 0.6;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+/* ---- Gradio Frame Override ---- */
+.gradio-container {
+  background: transparent !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+footer.svelte-1rjryqp,
+footer {
+  display: none !important;
+}
+
+.app.svelte-182fdeq {
+  padding: 0 !important;
+}
+
+/* ======================================================= 
+   LAYOUT
+   ======================================================= */
+
+#main-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: transparent;
+}
+
+/* ---- Sidebar ---- */
+#sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid var(--border-light);
+  box-shadow: 4px 0 24px rgba(6, 78, 59, 0.03);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Main Content ---- */
+#main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: transparent;
+}
+
+/* ======================================================= 
+   SIDEBAR COMPONENTS
+   ======================================================= */
+
+#logo-section {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+}
+
+#logo-section .logo-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 12px;
+  color: var(--royal-gold);
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+}
+
+#logo-section .logo-text {
+  font-family: 'Cinzel Decorative', serif !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: var(--pine-dark) !important;
+  letter-spacing: 2px !important;
+  display: block;
+  line-height: 1.2;
+}
+
+#logo-section .tagline {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 13px !important;
+  font-style: italic;
+  color: var(--text-gold) !important;
+  letter-spacing: 1px !important;
+  margin-top: 6px;
+  display: block;
+}
+
+#logo-section .rune-divider {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 14px;
+  color: var(--royal-gold);
+  letter-spacing: 8px;
+  margin-top: 16px;
+  opacity: 0.7;
+  display: block;
+}
+
+#session-section {
+  padding: 24px 16px;
+  flex: 1;
+}
+
+#session-section .section-title {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600;
+  color: var(--text-muted) !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-left: 8px;
+}
+
+/* History items */
+.history-item-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-secondary) !important;
+  font-family: 'Inter', sans-serif !important;
+  line-height: 1.4;
+}
+
+.history-item-btn:hover {
+  background: var(--bg-hover) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
+}
+
+.history-item-btn .hist-title {
+  display: block;
+  color: var(--pine-dark);
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.history-item-btn .hist-meta {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+#sidebar-actions {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ======================================================= 
+   HEADER / TOPBAR
+   ======================================================= */
+
+#topbar {
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.05);
+}
+
+#topbar .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--pine-mid);
+}
+
+#topbar .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pine-light);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+#topbar .session-id {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ======================================================= 
+   CAMERA / VISION SECTION
+   ======================================================= */
+
+#vision-panel {
+  padding: 24px 32px;
+}
+
+#vision-panel .panel-header {
+  font-family: 'Cinzel Decorative', serif !important;
+  font-size: 16px !important;
+  color: var(--pine-dark) !important;
+  letter-spacing: 1px !important;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#vision-panel .panel-header svg {
+  color: var(--royal-gold);
+}
+
+/* Camera frame */
+.camera-frame {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-elevated);
+  background: var(--bg-card);
+  padding: 8px;
+  /* Inner bezel */
+}
+
+/* Override Gradio image component inside camera frame */
+.camera-frame .image-container,
+.camera-frame img,
+.camera-frame video {
+  width: 100% !important;
+  border-radius: var(--radius) !important;
+}
+
+/* Snapshot Preview Styling */
+.snapshot-preview-img img {
+  border-radius: var(--radius) !important;
+  border: 2px solid var(--border-gold) !important;
+  box-shadow: var(--shadow-soft);
+}
+
+/* ======================================================= 
+   CHAT SECTION
+   ======================================================= */
+
+#chat-panel {
+  flex: 1;
+  padding: 0 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#chat-panel .panel-header {
+  font-family: 'Cinzel Decorative', serif !important;
+  font-size: 16px !important;
+  color: var(--pine-dark) !important;
+  letter-spacing: 1px !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Chatbot container */
+.chatbot-container {
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg-card) !important;
+  box-shadow: var(--shadow-soft) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Built-in Gradio chat bubbles will use these vars when not in dark mode */
+.chatbot-container .message-wrap {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.chatbot-container .message.bot p {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 17px !important;
+  line-height: 1.6 !important;
+  color: var(--pine-dark) !important;
+}
+
+/* ======================================================= 
+   BUTTONS — Global
+   ======================================================= */
+
+.btn-majestic {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-secondary) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+  border-radius: var(--radius) !important;
+  padding: 10px 20px !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.btn-majestic svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-majestic:hover {
+  background: white !important;
+  box-shadow: var(--shadow-elevated) !important;
+  transform: translateY(-2px) !important;
+  border-color: rgba(15, 23, 42, 0.2) !important;
+}
+
+.btn-majestic:active {
+  transform: translateY(0) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.btn-majestic-primary {
+  background: linear-gradient(135deg, var(--royal-gold), #B45309) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: var(--shadow-gold) !important;
+  font-weight: 600 !important;
+}
+
+.btn-majestic-primary:hover {
+  background: linear-gradient(135deg, #FBBF24, #D97706) !important;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3) !important;
+}
+
+.btn-majestic-danger {
+  color: var(--alert-red) !important;
+}
+
+.btn-majestic-danger:hover {
+  background: #FEF2F2 !important;
+  border-color: #FCA5A5 !important;
+}
+
+/* Override Gradio buttons */
+button.primary,
+.primary-btn {
+  background: var(--royal-gold) !important;
+  border: none !important;
+  color: white !important;
+  font-family: 'Inter', sans-serif !important;
+  border-radius: var(--radius) !important;
+  font-weight: 500 !important;
+}
+
+button.secondary {
+  background: white !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-secondary) !important;
+  font-family: 'Inter', sans-serif !important;
+  border-radius: var(--radius) !important;
+}
+
+/* ======================================================= 
+   FORM INPUTS
+   ======================================================= */
+
+.majestic-input textarea,
+.majestic-input input[type="text"] {
+  background: white !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+  border-radius: var(--radius) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.majestic-input textarea:focus,
+.majestic-input input:focus {
+  border-color: var(--royal-gold) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2) !important;
+  outline: none !important;
+}
+
+/* ======================================================= 
+   AUDIO INPUT
+   ======================================================= */
+
+.audio-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* ======================================================= 
+   LABELS & HEADERS
+   ======================================================= */
+
+label,
+.label-wrap span {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: var(--text-muted) !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+/* ======================================================= 
+   ANIMATIONS
+   ======================================================= */
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ======================================================= 
+   MOBILE RESPONSIVENESS
+   ======================================================= */
+
+@media (max-width: 768px) {
+  #sidebar {
+    position: fixed;
+    left: -100%;
+    height: 100%;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  }
+
+  #sidebar.open {
+    left: 0;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+  }
+
+  #main-content {
+    margin-left: 0;
+  }
+
+  #vision-panel,
+  #chat-panel {
+    padding: 16px;
+  }
+
+  .camera-controls {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+/* ======================================================= 
+   MISC UTILITIES
+   ======================================================= */
+
+.panel-divider {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 16px 0;
+}
+
+/* Gradio block / container overrides */
+.gr-block,
+.gr-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.gr-padded {
+  padding: 0 !important;
+}
+
+/* File upload */
+.file-preview {
+  background: var(--bg-mist) !important;
+  border: 1px dashed var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Voice status indicator */
+#voice-status {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pine-mid);
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+#voice-status.active {
+  display: flex;
+  animation: pulse-soft 2s infinite;
+}
+
+/* Snapshot flash effect */
+@keyframes snapshot-flash {
+  0% {
+    opacity: 1;
+  }
+
+  30% {
+    opacity: 0.5;
+    filter: brightness(1.5);
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.snapshot-flash {
+  animation: snapshot-flash 0.4s ease;
+}
+
+/* Export notification */
+.notif-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-card);
+  border-left: 4px solid var(--pine-mid);
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-elevated);
+  z-index: 9999;
+  animation: fade-in-up 0.3s ease;
+}

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.agent/
+.gemini/
+*.webp
+*.png
+*.jpg
+*.json
+*.sqlite
