@@ -9,3 +9,5 @@ __pycache__/
 *.jpg
 *.json
 *.sqlite
+out.txt
+error.log

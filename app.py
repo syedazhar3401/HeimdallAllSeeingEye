@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 from PIL import Image
 from dotenv import load_dotenv
+from heimdall_agent import HeimdallAgent
 
 load_dotenv()
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
@@ -401,17 +402,12 @@ FULL_HEAD_JS = f"""
 # BACK-END LOGIC
 # ──────────────────────────────────────────────
 
-def call_heimdall(image_base64: str = None, user_text: str = "") -> tuple[str, list]:
-    # Placeholder for Mistral Vision API integration
-    # returns (response_text, list_of_generated_image_urls_or_paths)
-    return f"This is a placeholder response from Heimdall. I received your text: '{user_text}' and {'an image' if image_base64 else 'no image'}.", []
-
-
 def process_message(
     user_message: dict | None,
     snapshot_image,
     chat_history: list,
     use_snapshot: bool,
+    agent: HeimdallAgent,
 ):
     audio_bytes = None
     """
@@ -494,8 +490,9 @@ def process_message(
     # Yield just the user message first
     yield chat_history, "", export_json
 
-    # ── Call Heimdall Placeholder ──
-    response_text, images = call_heimdall(image_base64=b64_img_for_api, user_text=text_input)
+    # ── Call Heimdall ──
+    response_data = agent.process(image_base64=b64_img_for_api, user_message=text_input)
+    response_text = response_data.get("text", "")
     
     # Prepare Assistant Message Placeholder
     assistant_msg = {"role": "assistant", "content": ""}
@@ -569,6 +566,7 @@ def build_app() -> gr.Blocks:
         use_snapshot_flag = gr.State(value=False)
         conversation_id = gr.State(value=lambda: str(uuid.uuid4()))
         last_image_base64 = gr.State(value=None)
+        heimdall_agent_state = gr.State(value=HeimdallAgent)
 
         # ──────────────────────────────────────────────────────────
         # OUTER LAYOUT: 3-Column (20% - 60% - 20%)
@@ -671,7 +669,7 @@ def build_app() -> gr.Blocks:
 
         msg_input.submit(
             fn=process_message,
-            inputs=[msg_input, snapshot_preview, chatbot, use_snapshot_cb],
+            inputs=[msg_input, snapshot_preview, chatbot, use_snapshot_cb, heimdall_agent_state],
             outputs=[chatbot, tts_trigger, export_data_box],
         )
 
@@ -690,7 +688,7 @@ def build_app() -> gr.Blocks:
                 outputs=[msg_input]
             ).then(
                 fn=process_message,
-                inputs=[msg_input, snapshot_preview, chatbot, use_snapshot_cb],
+                inputs=[msg_input, snapshot_preview, chatbot, use_snapshot_cb, heimdall_agent_state],
                 outputs=[chatbot, tts_trigger, export_data_box],
             )
 
@@ -748,10 +746,10 @@ def build_app() -> gr.Blocks:
 # ──────────────────────────────────────────────
 if __name__ == "__main__":
     print("""
-╔══════════════════════════════════════════════════════╗
-║       HEIMDALL — YOUR VISUAL LIFE GUARDIAN          ║
-║       Initializing Bifrost Connection...            ║
-╚══════════════════════════════════════════════════════╝
+======================================================
+       HEIMDALL — YOUR VISUAL LIFE GUARDIAN          
+       Initializing Bifrost Connection...            
+======================================================
     """)
     app, custom_css = build_app()
     custom_theme = gr.themes.Soft(
